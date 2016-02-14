@@ -42,33 +42,10 @@ public class ChromeBrowser extends Browser {
 	private String chromeKeyringPassword = null;
 	
 	/**
-	 * Returns all cookies
-	 */
-	@Override
-	public Set<Cookie> getCookies() {
-		HashSet<Cookie> cookies = new HashSet<Cookie>();
-		for(File cookieStore : getCookieStores()){
-			cookies.addAll(processCookies(cookieStore, null));
-		}
-		return cookies;
-	}
-	
-	/**
-	 * Returns cookies for a given domain
-	 */
-	@Override
-	public Set<Cookie> getCookiesForDomain(String domain) {
-		HashSet<Cookie> cookies = new HashSet<Cookie>();
-		for(File cookieStore : getCookieStores()){
-			cookies.addAll(processCookies(cookieStore, domain));
-		}
-		return cookies;
-	}
-	
-	/**
 	 * Returns a set of cookie store locations
 	 * @return
 	 */
+	@Override
 	protected Set<File> getCookieStores() {
 		HashSet<File> cookieStores = new HashSet<File>();
 		
@@ -88,11 +65,14 @@ public class ChromeBrowser extends Browser {
 	}
 	
 	/**
-	 * Processes all cookies in the cookie store for a given domain or all domains if domainFilter is null
+	 * Processes all cookies in the cookie store for a given domain or all
+	 * domains if domainFilter is null
+	 * 
 	 * @param cookieStore
 	 * @param domainFilter
 	 * @return
 	 */
+	@Override
 	protected Set<Cookie> processCookies(File cookieStore, String domainFilter) {
 		HashSet<Cookie> cookies = new HashSet<Cookie>();
 		if(cookieStore.exists()){
@@ -158,14 +138,15 @@ public class ChromeBrowser extends Browser {
 
 	/**
 	 * Decrypts an encrypted cookie
-	 * @param c
+	 * @param encryptedCookie
 	 * @return
 	 */
-	protected DecryptedCookie decrypt(EncryptedCookie c) {
+	@Override
+	protected DecryptedCookie decrypt(EncryptedCookie encryptedCookie) {
 		byte[] decryptedBytes = null;
 		if(OS.isWindows()){
 			try {
-				decryptedBytes = Crypt32Util.cryptUnprotectData(c.getEncryptedValue());
+				decryptedBytes = Crypt32Util.cryptUnprotectData(encryptedCookie.getEncryptedValue());
 			} catch (Exception e){
 				decryptedBytes = null;
 			}
@@ -190,8 +171,8 @@ public class ChromeBrowser extends Browser {
 				cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(new String(iv).getBytes()));
 				
 				// if cookies are encrypted "v10" is a the prefix (has to be removed before decryption)
-				byte[] encryptedBytes = c.getEncryptedValue();
-				if (new String(c.getEncryptedValue()).startsWith("v10")) {
+				byte[] encryptedBytes = encryptedCookie.getEncryptedValue();
+				if (new String(encryptedCookie.getEncryptedValue()).startsWith("v10")) {
 					encryptedBytes = Arrays.copyOfRange(encryptedBytes, 3, encryptedBytes.length);
 				}
 				decryptedBytes = cipher.doFinal(encryptedBytes);
@@ -227,8 +208,8 @@ public class ChromeBrowser extends Browser {
 				cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(new String(iv).getBytes()));
 				
 				// if cookies are encrypted "v10" is a the prefix (has to be removed before decryption)
-				byte[] encryptedBytes = c.getEncryptedValue();
-				if (new String(c.getEncryptedValue()).startsWith("v10")) {
+				byte[] encryptedBytes = encryptedCookie.getEncryptedValue();
+				if (new String(encryptedCookie.getEncryptedValue()).startsWith("v10")) {
 					encryptedBytes = Arrays.copyOfRange(encryptedBytes, 3, encryptedBytes.length);
 				}
 				decryptedBytes = cipher.doFinal(encryptedBytes);
@@ -240,15 +221,15 @@ public class ChromeBrowser extends Browser {
 		if(decryptedBytes == null){
 			return null;
 		} else {		
-			return new DecryptedCookie(c.getName(),
-									   c.getEncryptedValue(),
+			return new DecryptedCookie(encryptedCookie.getName(),
+									   encryptedCookie.getEncryptedValue(),
 									   new String(decryptedBytes),
-									   c.getExpires(),
-									   c.getPath(),
-									   c.getDomain(),
-									   c.isSecure(),
-									   c.isHttpOnly(),
-									   c.getCookieStore());
+									   encryptedCookie.getExpires(),
+									   encryptedCookie.getPath(),
+									   encryptedCookie.getDomain(),
+									   encryptedCookie.isSecure(),
+									   encryptedCookie.isHttpOnly(),
+									   encryptedCookie.getCookieStore());
 		}
 	}
 
