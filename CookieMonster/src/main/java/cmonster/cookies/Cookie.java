@@ -2,7 +2,6 @@ package cmonster.cookies;
 import java.io.File;
 import java.util.Date;
 
-
 public abstract class Cookie {
 
 	protected String name;
