@@ -13,7 +13,7 @@ A utility for exfiltrating cookies from local browser cookie stores.
 | **Browser**       | **Support**         |
 |-------------------|---------------------|
 | Chrome            | Mac, Windows, Linux |
-| Firefox           | Not Supported       |
-| Internet Explorer | Not Supported       |
-| Safari            | Not Supported       |
-| Opera             | Not Supported       |
+| Firefox           | Not Supported (Yet) |
+| Internet Explorer | Not Supported (Yet) |
+| Safari            | Not Supported (Yet) |
+| Opera             | Not Supported (Yet) |
