@@ -10,7 +10,7 @@ public class Exfil {
 	/**
 	 * Exfiltrates data in a background thread
 	 * @param exfilLocation The url of the exfil target
-	 * @param client The identifier of the victim
+	 * @param victim The identifier of the victim
 	 * @param data Base64 encoded toString of data object
 	 */
 	public static void exfil(final String exfilLocation, final String victim, final Object data){

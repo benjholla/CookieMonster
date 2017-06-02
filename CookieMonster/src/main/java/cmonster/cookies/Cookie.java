@@ -4,14 +4,14 @@ import java.util.Date;
 
 public abstract class Cookie {
 
-	protected String name;
-	protected byte[] encryptedValue;
-	protected Date expires;
-	protected String path;
-	protected String domain;
-	protected boolean secure;
-	protected boolean httpOnly;
-	protected File cookieStore;
+	String name;
+	private byte[] encryptedValue;
+	private Date expires;
+	private String path;
+	private String domain;
+	private boolean secure;
+	private boolean httpOnly;
+	private File cookieStore;
 	
 	public Cookie(String name, byte[] encryptedValue, Date expires, String path, String domain, boolean secure, boolean httpOnly, File cookieStore) {
 		this.name = name;
