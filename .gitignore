@@ -18,3 +18,8 @@ buildNumber.properties
 
 # Project Specific
 .cookies.db
+.idea/
+.classpath
+.project
+.CookieMonster.iml
+
