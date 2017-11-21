@@ -111,30 +111,7 @@ public class ChromeBrowser extends Browser {
                 }
                 while (result.next()) {
                     String name = result.getString("name");
-                    byte[] encryptedBytes = result.getBytes("encrypted_value");
-                    String path = result.getString("path");
-                    String domain = result.getString("host_key");
-                    boolean secure = result.getBoolean("secure");
-                    boolean httpOnly = result.getBoolean("httponly");
-                    Date expires = result.getDate("expires_utc");
-
-                    EncryptedCookie encryptedCookie = new EncryptedCookie(name,
-                        encryptedBytes,
-                        expires,
-                        path,
-                        domain,
-                        secure,
-                        httpOnly,
-                        cookieStore);
-
-                    DecryptedCookie decryptedCookie = decrypt(encryptedCookie);
-
-                    if (decryptedCookie != null) {
-                        cookies.add(decryptedCookie);
-                    } else {
-                        cookies.add(encryptedCookie);
-                    }
-                    cookieStoreCopy.delete();
+                    parseCookieFromResult(cookieStore, name, cookies, result);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -151,6 +128,84 @@ public class ChromeBrowser extends Browser {
             }
         }
         return cookies;
+    }
+
+    /**
+     * Returns cookies for cookie key with given domain
+     */
+    @Override
+    public Set<Cookie> getCookiesForDomain(String name, String domain) {
+        HashSet<Cookie> cookies = new HashSet<>();
+        for(File cookieStore : getCookieStores()){
+            cookies.addAll(getCookiesByName(cookieStore, name, domain));
+        }
+        return cookies;
+    }
+
+    private Set<Cookie> getCookiesByName(File cookieStore, String name, String domainFilter) {
+        HashSet<Cookie> cookies = new HashSet<>();
+        if (cookieStore.exists()) {
+            Connection connection = null;
+            try {
+                cookieStoreCopy.delete();
+                Files.copy(cookieStore.toPath(), cookieStoreCopy.toPath());
+                // load the sqlite-JDBC driver using the current class loader
+                Class.forName("org.sqlite.JDBC");
+                // create a database connection
+                connection = DriverManager.getConnection("jdbc:sqlite:" + cookieStoreCopy.getAbsolutePath());
+                Statement statement = connection.createStatement();
+                statement.setQueryTimeout(30); // set timeout to 30 seconds
+                ResultSet result;
+                if (domainFilter == null || domainFilter.isEmpty()) {
+                    result = statement.executeQuery("select * from cookies where name = '" + name + "'");
+                } else {
+                    result = statement.executeQuery("select * from cookies where name = '" + name + "' and host_key like '%" + domainFilter + "%'");
+                }
+                while (result.next()) {
+                    parseCookieFromResult(cookieStore, name, cookies, result);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                // if the error message is "out of memory",
+                // it probably means no database file is found
+            } finally {
+                try {
+                    if (connection != null) {
+                        connection.close();
+                    }
+                } catch (SQLException e) {
+                    // connection close failed
+                }
+            }
+        }
+        return cookies;
+    }
+
+    private void parseCookieFromResult(File cookieStore, String name, HashSet<Cookie> cookies, ResultSet result) throws SQLException {
+        byte[] encryptedBytes = result.getBytes("encrypted_value");
+        String path = result.getString("path");
+        String domain = result.getString("host_key");
+        boolean secure = result.getBoolean("secure");
+        boolean httpOnly = result.getBoolean("httponly");
+        Date expires = result.getDate("expires_utc");
+
+        EncryptedCookie encryptedCookie = new EncryptedCookie(name,
+            encryptedBytes,
+            expires,
+            path,
+            domain,
+            secure,
+            httpOnly,
+            cookieStore);
+
+        DecryptedCookie decryptedCookie = decrypt(encryptedCookie);
+
+        if (decryptedCookie != null) {
+            cookies.add(decryptedCookie);
+        } else {
+            cookies.add(encryptedCookie);
+        }
+        cookieStoreCopy.delete();
     }
 
     /**

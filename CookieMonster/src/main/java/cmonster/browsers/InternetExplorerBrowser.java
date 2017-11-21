@@ -10,7 +10,12 @@ import cmonster.cookies.EncryptedCookie;
 
 public class InternetExplorerBrowser extends Browser {
 
-	@Override
+    @Override
+    public Set<Cookie> getCookiesForDomain(String name, String domain) {
+        return null;
+    }
+
+    @Override
 	protected Set<File> getCookieStores() {
 		HashSet<File> cookieStores = new HashSet<File>();
 
