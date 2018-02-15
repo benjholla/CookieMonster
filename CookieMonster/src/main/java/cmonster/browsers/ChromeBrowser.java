@@ -157,9 +157,9 @@ public class ChromeBrowser extends Browser {
                 statement.setQueryTimeout(30); // set timeout to 30 seconds
                 ResultSet result;
                 if (domainFilter == null || domainFilter.isEmpty()) {
-                    result = statement.executeQuery("select * from cookies where name = '" + name + "'");
+                    result = statement.executeQuery(String.format("select * from cookies where name = '%s'", name));
                 } else {
-                    result = statement.executeQuery("select * from cookies where name = '" + name + "' and host_key like '%" + domainFilter + "%'");
+                    result = statement.executeQuery("select * from cookies where name = '" + name + "' and host_key like '%" + domainFilter + "'");
                 }
                 while (result.next()) {
                     parseCookieFromResult(cookieStore, name, cookies, result);
