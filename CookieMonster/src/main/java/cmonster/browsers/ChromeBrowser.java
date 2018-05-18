@@ -185,7 +185,7 @@ public class ChromeBrowser extends Browser {
         byte[] encryptedBytes = result.getBytes("encrypted_value");
         String path = result.getString("path");
         String domain = result.getString("host_key");
-        boolean secure = result.getBoolean("secure");
+        boolean secure = determineSecure(result);
         boolean httpOnly = result.getBoolean("httponly");
         Date expires = result.getDate("expires_utc");
 
@@ -206,6 +206,16 @@ public class ChromeBrowser extends Browser {
             cookies.add(encryptedCookie);
         }
         cookieStoreCopy.delete();
+    }
+
+    private boolean determineSecure(ResultSet result) throws SQLException {
+        boolean secure;
+        try {
+            secure = result.getBoolean("secure");
+        } catch (SQLException e) {
+            secure = result.getBoolean("is_secure");
+        }
+        return secure;
     }
 
     /**
