@@ -186,7 +186,7 @@ public class ChromeBrowser extends Browser {
         String path = result.getString("path");
         String domain = result.getString("host_key");
         boolean secure = determineSecure(result);
-        boolean httpOnly = result.getBoolean("httponly");
+        boolean httpOnly = determineHttpOnly(result);
         Date expires = result.getDate("expires_utc");
 
         EncryptedCookie encryptedCookie = new EncryptedCookie(name,
@@ -208,6 +208,16 @@ public class ChromeBrowser extends Browser {
         cookieStoreCopy.delete();
     }
 
+    private boolean determineHttpOnly(ResultSet result) throws SQLException {
+        boolean secure;
+        try {
+            secure = result.getBoolean("is_httponly");
+        } catch (SQLException e) {
+            secure = result.getBoolean("httponly");
+        }
+        return secure;
+    }
+    
     private boolean determineSecure(ResultSet result) throws SQLException {
         boolean secure;
         try {
