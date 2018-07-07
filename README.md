@@ -1,7 +1,10 @@
 # CookieMonster
 A utility for exfiltrating cookies from local browser cookie stores.
 
-## Usage
+## CLI Usage
+	java -jar CookieMonster.jar --domain=facebook.com
+
+## Library Usage
 	Browser chrome = new ChromeBrowser();
 	// Set<Cookie> cookies = chrome.getCookies(); // all browser cookies
 	Set<Cookie> cookies = chrome.getCookiesForDomain("github.com");
