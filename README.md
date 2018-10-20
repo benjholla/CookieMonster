@@ -2,7 +2,7 @@
 A utility for exfiltrating cookies from local browser cookie stores.
 
 ## CLI Usage
-	java -jar CookieMonster.jar --domain=facebook.com
+	java -jar CookieMonster.jar --browsers=chrome --domains=facebook.com
 
 ## Library Usage
 	Browser chrome = new ChromeBrowser();
@@ -16,7 +16,7 @@ A utility for exfiltrating cookies from local browser cookie stores.
 | **Browser**       | **Support**         |
 |-------------------|---------------------|
 | Chrome            | Mac, Windows, Linux |
-| Firefox           | Not Supported (Yet) |
+| Firefox           | Only Basic Support  |
 | Internet Explorer | Not Supported (Yet) |
 | Safari            | Not Supported (Yet) |
 | Opera             | Not Supported (Yet) |
