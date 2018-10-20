@@ -10,6 +10,11 @@ import java.util.Set;
 
 public abstract class Browser {
 	
+	@Override
+	public String toString() {
+		return getName();
+	}
+	
 	/**
 	 * A file that should be used to make a temporary copy of the browser's cookie store
 	 */
@@ -61,5 +66,11 @@ public abstract class Browser {
 	 * @return
 	 */
 	protected abstract DecryptedCookie decrypt(EncryptedCookie encryptedCookie);
+
+	/**
+	 * Returns the browser proper name
+	 * @return
+	 */
+	public abstract String getName();
 	
 }

@@ -2,20 +2,41 @@ package cmonster.cookies;
 import java.io.File;
 import java.util.Date;
 
-public abstract class Cookie {
+public class Cookie {
 
-	String name;
-	private byte[] encryptedValue;
-	private Date expires;
-	private String path;
-	private String domain;
-	private boolean secure;
-	private boolean httpOnly;
-	private File cookieStore;
+	protected String name;
+	protected String value;
+	protected Date expires;
+	protected String path;
+	protected String domain;
+	protected boolean secure;
+	protected boolean httpOnly;
+	protected File cookieStore;
 	
-	public Cookie(String name, byte[] encryptedValue, Date expires, String path, String domain, boolean secure, boolean httpOnly, File cookieStore) {
+	/**
+	 * Represents an unencrypted cookie
+	 * @param name
+	 * @param value
+	 * @param expires
+	 * @param path
+	 * @param domain
+	 * @param secure
+	 * @param httpOnly
+	 * @param cookieStore
+	 */
+	public Cookie(String name, String value, Date expires, String path, String domain, boolean secure, boolean httpOnly, File cookieStore) {
 		this.name = name;
-		this.encryptedValue = encryptedValue;
+		this.value = value;
+		this.expires = expires;
+		this.path = path;
+		this.domain = domain;
+		this.secure = secure;
+		this.httpOnly = httpOnly;
+		this.cookieStore = cookieStore;
+	}
+	
+	public Cookie(String name, Date expires, String path, String domain, boolean secure, boolean httpOnly, File cookieStore) {
+		this.name = name;
 		this.expires = expires;
 		this.path = path;
 		this.domain = domain;
@@ -26,10 +47,6 @@ public abstract class Cookie {
 	
 	public String getName() {
 		return name;
-	}
-
-	public byte[] getEncryptedValue() {
-		return encryptedValue;
 	}
 
 	public Date getExpires() {
@@ -55,7 +72,9 @@ public abstract class Cookie {
 	public File getCookieStore(){
 		return cookieStore;
 	}
-	
-	public abstract boolean isDecrypted();
 
+	@Override
+	public String toString() {
+		return "Cookie [name=" + name + ", value=" + value + "]";
+	}
 }

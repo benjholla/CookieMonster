@@ -8,14 +8,14 @@ import cmonster.cookies.Cookie;
 import cmonster.cookies.DecryptedCookie;
 import cmonster.cookies.EncryptedCookie;
 
-public class InternetExplorerBrowser extends Browser {
-
+public class SafariBrowser extends Browser {
+	
 	@Override
 	public String getName() {
-		return "Internet Explorer";
+		return "Safari";
 	}
 	
-    @Override
+	@Override
     public Set<Cookie> getCookiesForDomain(String name, String domain) {
         return null;
     }
@@ -24,14 +24,7 @@ public class InternetExplorerBrowser extends Browser {
 	protected Set<File> getCookieStores() {
 		HashSet<File> cookieStores = new HashSet<File>();
 
-		// WinXP
-		cookieStores.add(new File(System.getProperty("user.home") + "\\Cookies\\"));
-		
-		// Win7
-		cookieStores.add(new File(System.getProperty("user.home") + "\\AppData\\Roaming\\Microsoft\\Windows\\Cookies\\"));
-
-		// Win8
-		cookieStores.add(new File(System.getProperty("user.home") + "\\AppData\\Local\\Microsoft\\Windows\\INetCookies\\"));
+		// TODO: implement
 		
 		return cookieStores;
 	}

@@ -33,6 +33,11 @@ import java.util.Set;
  * @author Ben Holland
  */
 public class ChromeBrowser extends Browser {
+	
+	@Override
+	public String getName() {
+		return "Chrome";
+	}
 
     private String chromeKeyringPassword = null;
 
@@ -339,4 +344,5 @@ public class ChromeBrowser extends Browser {
         }
         return result.toString();
     }
+
 }
