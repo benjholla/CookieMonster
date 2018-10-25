@@ -48,6 +48,10 @@ public class Cookie {
 	public String getName() {
 		return name;
 	}
+	
+	public String getValue() {
+		return value;
+	}
 
 	public Date getExpires() {
 		return expires;
