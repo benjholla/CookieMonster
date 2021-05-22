@@ -14,6 +14,7 @@ public class EncryptedCookie extends Cookie {
 	public EncryptedCookie(String name, byte[] encryptedValue, Date expires, String path, String domain, boolean secure, boolean httpOnly, File cookieStore) {
 		super(name, expires, path, domain, secure, httpOnly, cookieStore);
 		this.encryptedValue = encryptedValue;
+		this.value = "(encrypted)";
 	}
 
 	public boolean isDecrypted() {
