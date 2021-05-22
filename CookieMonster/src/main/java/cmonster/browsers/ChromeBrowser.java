@@ -4,11 +4,14 @@ import cmonster.cookies.Cookie;
 import cmonster.cookies.DecryptedCookie;
 import cmonster.cookies.EncryptedCookie;
 import cmonster.utils.OS;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.platform.win32.Crypt32Util;
 import org.apache.maven.shared.utils.io.DirectoryScanner;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,10 +21,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.sql.*;
-import java.util.Arrays;
+import java.util.*;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * An implementation of Chrome cookie decryption logic for Mac, Windows, and Linux installs
@@ -40,6 +41,36 @@ public class ChromeBrowser extends Browser {
 	}
 
     private String chromeKeyringPassword = null;
+	private byte[] windowsMasterKey;
+
+	public ChromeBrowser() {
+        super();
+
+        if (OS.isWindows()) {
+            // Inspired by https://stackoverflow.com/a/65953409/1631104
+
+            // Get encrypted master key
+            String pathLocalState = System.getProperty("user.home") + "/AppData/Local/Google/Chrome/User Data/Local State";
+            File localStateFile = new File(pathLocalState);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = null;
+            try {
+                jsonNode = objectMapper.readTree(localStateFile);
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to load JSON from Chrome Local State file", e);
+            }
+
+            String encryptedMasterKeyWithPrefixB64 = jsonNode.at("/os_crypt/encrypted_key").asText();
+
+            // Remove prefix (DPAPI)
+            byte[] encryptedMasterKeyWithPrefix = Base64.getDecoder().decode(encryptedMasterKeyWithPrefixB64);
+            byte[] encryptedMasterKey = Arrays.copyOfRange(encryptedMasterKeyWithPrefix, 5, encryptedMasterKeyWithPrefix.length);
+
+            // Decrypt and store the master key for use later
+            this.windowsMasterKey = Crypt32Util.cryptUnprotectData(encryptedMasterKey);
+        }
+    }
 
     /**
      * Returns a set of cookie store locations
@@ -239,12 +270,27 @@ public class ChromeBrowser extends Browser {
     @Override
     protected DecryptedCookie decrypt(EncryptedCookie encryptedCookie) {
         byte[] decryptedBytes = null;
+
         if (OS.isWindows()) {
+            // Separate prefix (v10), nonce and ciphertext/tag
+            byte[] nonce = Arrays.copyOfRange(encryptedCookie.getEncryptedValue(), 3, 3 + 12);
+            byte[] ciphertextTag = Arrays.copyOfRange(encryptedCookie.getEncryptedValue(), 3 + 12,
+                    encryptedCookie.getEncryptedValue().length);
+
+            // Decrypt
             try {
-                decryptedBytes = Crypt32Util.cryptUnprotectData(encryptedCookie.getEncryptedValue());
-            } catch (Exception e) {
-                decryptedBytes = null;
+                Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+
+                GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, nonce);
+                SecretKeySpec keySpec = new SecretKeySpec(windowsMasterKey, "AES");
+
+                cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+                decryptedBytes = cipher.doFinal(ciphertextTag);
             }
+            catch (Exception e) {
+                throw new IllegalStateException("Error decrypting", e);
+            }
+
         } else if (OS.isLinux()) {
             try {
                 byte[] salt = "saltysalt".getBytes();
