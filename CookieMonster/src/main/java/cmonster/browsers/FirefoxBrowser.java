@@ -31,16 +31,25 @@ public class FirefoxBrowser extends Browser {
 		return cookies;
 	}
 
-    @Override
+	@Override
 	protected Set<File> getCookieStores() {
-		HashSet<File> cookieStores = new HashSet<File>();
-		File baseDirectory = new File(System.getProperty("user.home") + "\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\");
-		if(baseDirectory.exists()) {
-			for(File profile : baseDirectory.listFiles()) {
-				if(profile.isDirectory() && profile.getName().endsWith(".default")) {
-					for(File file : profile.listFiles()) {
-						if(file.isFile() && file.getName().equals("cookies.sqlite")) {
-							cookieStores.add(file);
+		HashSet<File> cookieStores = new HashSet<>();
+		String userHome = System.getProperty("user.home");
+
+		String[] cookieDirectories = {
+			"/AppData/Roaming/Mozilla/Firefox/Profiles/",
+			"/Library/Application Support/Firefox/Profiles/"
+		};
+
+		for (String cookieDirectory : cookieDirectories) {
+			File baseDirectory = new File(userHome + cookieDirectory);
+			if(baseDirectory.isDirectory()) {
+				for(File profile : baseDirectory.listFiles()) {
+					if(profile.isDirectory() && profile.getName().endsWith(".default")) {
+						for(File file : profile.listFiles()) {
+							if(file.isFile() && file.getName().equals("cookies.sqlite")) {
+								cookieStores.add(file);
+							}
 						}
 					}
 				}
@@ -48,7 +57,7 @@ public class FirefoxBrowser extends Browser {
 		}
 		return cookieStores;
 	}
-    
+
     private Set<Cookie> getCookiesByName(File cookieStore, String name, String domainFilter) {
         HashSet<Cookie> cookies = new HashSet<>();
         if (cookieStore.exists()) {
