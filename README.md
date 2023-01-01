@@ -20,3 +20,13 @@ A utility for exfiltrating cookies from local browser cookie stores.
 | Internet Explorer | Not Supported (Yet) |
 | Safari            | Not Supported (Yet) |
 | Opera             | Not Supported (Yet) |
+
+## Building
+
+To build the project clean run maven at the root of the `CookieMonster` project.
+
+`mvn clean install -U`
+
+The build result will be at `CookieMonster/target`.
+
+The `fat` jar includes all necessary dependencies.
