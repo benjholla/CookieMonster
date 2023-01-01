@@ -15,8 +15,8 @@
 
 	<distributionManagement>
 		<repository>
-			<id>thirdparty</id>
-			<url>http://nexus.ibport.com:8082/nexus/content/repositories/thirdparty</url>
+			<id>Maven Central</id>
+			<url>https://repo1.maven.org/maven2/</url>
 		</repository>
 	</distributionManagement>
 
@@ -54,5 +54,38 @@
 			<version>2.12.7.1</version>
 		</dependency>
 	</dependencies>
+	
 	<description>A utility for exfiltrating cookies from local browser cookie stores.</description>
+	
+	<build>
+    <finalName>CookieMonster</finalName>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.1.1</version>
+
+            <configuration>
+                <archive>
+		          <manifest>
+		            <mainClass>cmonster.CookieMonster</mainClass>
+		          </manifest>
+		        </archive>
+                <descriptorRefs>
+                    <descriptorRef>fat</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+
+            <executions>
+                <execution>
+                    <id>make-assembly</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 </project>
