@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import cmonster.cookies.Cookie;
 import cmonster.cookies.DecryptedCookie;
@@ -37,8 +38,8 @@ public class FirefoxBrowser extends Browser {
 		String userHome = System.getProperty("user.home");
 
 		String[] cookieDirectories = {
-			"/AppData/Roaming/Mozilla/Firefox/Profiles/",
-			"/Library/Application Support/Firefox/Profiles/"
+			"/AppData/Roaming/Mozilla/Firefox/Profiles/".replaceAll("/", Matcher.quoteReplacement(File.separator)),
+			"/Library/Application Support/Firefox/Profiles/".replaceAll("/", Matcher.quoteReplacement(File.separator))
 		};
 
 		for (String cookieDirectory : cookieDirectories) {

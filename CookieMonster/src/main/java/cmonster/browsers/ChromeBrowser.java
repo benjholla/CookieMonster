@@ -1,13 +1,24 @@
 package cmonster.browsers;
 
-import cmonster.cookies.Cookie;
-import cmonster.cookies.DecryptedCookie;
-import cmonster.cookies.EncryptedCookie;
-import cmonster.utils.OS;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jna.platform.win32.Crypt32Util;
-import org.apache.maven.shared.utils.io.DirectoryScanner;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
@@ -15,14 +26,15 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.sql.*;
-import java.util.*;
-import java.util.Date;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jna.platform.win32.Crypt32Util;
+
+import cmonster.cookies.Cookie;
+import cmonster.cookies.DecryptedCookie;
+import cmonster.cookies.EncryptedCookie;
+import cmonster.utils.OS;
 
 /**
  * An implementation of Chrome cookie decryption logic for Mac, Windows, and Linux installs
@@ -50,7 +62,7 @@ public class ChromeBrowser extends Browser {
             // Inspired by https://stackoverflow.com/a/65953409/1631104
 
             // Get encrypted master key
-            String pathLocalState = System.getProperty("user.home") + "/AppData/Local/Google/Chrome/User Data/Local State";
+            String pathLocalState = System.getProperty("user.home") + "/AppData/Local/Google/Chrome/User Data/Local State".replaceAll("/", Matcher.quoteReplacement(File.separator));
             File localStateFile = new File(pathLocalState);
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -81,49 +93,40 @@ public class ChromeBrowser extends Browser {
         String userHome = System.getProperty("user.home");
 
         String[] cookieDirectories = {
-            "/AppData/Local/Google/Chrome/User Data",
-            "/Application Data/Google/Chrome/User Data",
-            "/Library/Application Support/Google/Chrome",
-            "/.config/chromium"
+            "/AppData/Local/Google/Chrome/User Data".replaceAll("/", Matcher.quoteReplacement(File.separator)),
+            "/Application Data/Google/Chrome/User Data".replaceAll("/", Matcher.quoteReplacement(File.separator)),
+            "/Library/Application Support/Google/Chrome".replaceAll("/", Matcher.quoteReplacement(File.separator)),
+            "/.config/chromium".replaceAll("/", Matcher.quoteReplacement(File.separator))
         };
 
         for (String cookieDirectory : cookieDirectories) {
             String baseDir = userHome + cookieDirectory;
-            String[] files = getCookieDbFiles(baseDir);
-            if (files != null && files.length > 0) {
-                for (String file : files) {
-                    cookieStores.add(new File(baseDir + "/" + file));
-                }
-            }
+            cookieStores.addAll(getCookieDbFiles(baseDir));
         }
 
         return cookieStores;
     }
 
     /**
-     * In come case, people could set profile for browsers, would create custom cookie files
+     * In some cases, people set profiles for browsers, which would creates custom cookie files
      * @param baseDir
-     * @author <a href="mailto:kbalbertyu@gmail.com">Albert Yu</a> 5/26/2017 1:40 PM
      */
-    private String[] getCookieDbFiles(String baseDir) {
-        String[] files = null;
+    private List<File> getCookieDbFiles(String baseDir) {
         File filePath = new File(baseDir);
         if (filePath.exists() && filePath.isDirectory()) {
-            DirectoryScanner ds = new DirectoryScanner();
-            String[] includes = {"*/Cookies"};
-            ds.setIncludes(includes);
-            ds.setBasedir(new File(baseDir));
-            ds.setCaseSensitive(true);
-            ds.scan();
-            files = ds.getIncludedFiles();
+        	return Arrays.stream(filePath.listFiles(new FilenameFilter() {
+        	    @Override
+        	    public boolean accept(File dir, String name) {
+        	        return name.endsWith("Cookies");
+        	    }
+        	})).collect(Collectors.toList());
         }
-        return files;
+        return List.of();
     }
-
 
     /**
      * Processes all cookies in the cookie store for a given domain or all
-     * domains if domainFilter is null
+     * domains if domainFilter is null/empty
      */
     @Override
     protected Set<Cookie> processCookies(File cookieStore, String domainFilter) {
