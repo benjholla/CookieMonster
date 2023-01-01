@@ -329,8 +329,8 @@ public class ChromeBrowser extends Browser {
             try {
                 byte[] salt = "saltysalt".getBytes();
                 char[] password = chromeKeyringPassword.toCharArray();
-                char[] iv = new char[16];
-                Arrays.fill(iv, ' ');
+                byte[] iv = new byte[16];
+                Arrays.fill(iv, (byte)' ');
                 int keyLength = 16;
 
                 int iterations = 1003;
@@ -343,7 +343,7 @@ public class ChromeBrowser extends Browser {
                 SecretKeySpec keySpec = new SecretKeySpec(aesKey, "AES");
 
                 Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(new String(iv).getBytes()));
+                cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv));
 
                 // if cookies are encrypted "v10" is a the prefix (has to be removed before decryption)
                 byte[] encryptedBytes = encryptedCookie.getEncryptedValue();
