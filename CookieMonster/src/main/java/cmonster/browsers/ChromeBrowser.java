@@ -2,10 +2,10 @@ package cmonster.browsers;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
@@ -114,14 +115,16 @@ public class ChromeBrowser extends Browser {
     private List<File> getCookieDbFiles(String baseDir) {
         File filePath = new File(baseDir);
         if (filePath.exists() && filePath.isDirectory()) {
-        	return Arrays.stream(filePath.listFiles(new FilenameFilter() {
-        	    @Override
-        	    public boolean accept(File dir, String name) {
-        	        return name.endsWith("Cookies");
-        	    }
-        	})).collect(Collectors.toList());
+            try (Stream<Path> paths = Files.walk(filePath.toPath())) {
+                return paths.filter( path -> path.getFileName().toString().endsWith("Cookies"))
+                        .map(Path::toFile)
+                        .collect(Collectors.toList());
+            } catch (IOException e) {
+               return List.of();
+            }
+        } else {
+            return List.of();
         }
-        return List.of();
     }
 
     /**
@@ -275,13 +278,13 @@ public class ChromeBrowser extends Browser {
         byte[] decryptedBytes = null;
 
         if (OS.isWindows()) {
-            // Separate prefix (v10), nonce and ciphertext/tag
-            byte[] nonce = Arrays.copyOfRange(encryptedCookie.getEncryptedValue(), 3, 3 + 12);
-            byte[] ciphertextTag = Arrays.copyOfRange(encryptedCookie.getEncryptedValue(), 3 + 12,
-                    encryptedCookie.getEncryptedValue().length);
-
-            // Decrypt
             try {
+                // Separate prefix (v10), nonce and ciphertext/tag
+                byte[] nonce = Arrays.copyOfRange(encryptedCookie.getEncryptedValue(), 3, 3 + 12);
+                byte[] ciphertextTag = Arrays.copyOfRange(encryptedCookie.getEncryptedValue(), 3 + 12,
+                        encryptedCookie.getEncryptedValue().length);
+
+                // Decrypt
                 Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 
                 GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, nonce);
@@ -291,7 +294,7 @@ public class ChromeBrowser extends Browser {
                 decryptedBytes = cipher.doFinal(ciphertextTag);
             }
             catch (Exception e) {
-                throw new IllegalStateException("Error decrypting", e);
+                decryptedBytes = null;
             }
 
         } else if (OS.isLinux()) {
@@ -393,5 +396,4 @@ public class ChromeBrowser extends Browser {
         }
         return result.toString();
     }
-
 }
